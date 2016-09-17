@@ -1,0 +1,34 @@
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+  vertical-align: middle;
+}
+
+.accountSummary {
+  vertical-align: middle;
+  padding: 0px;
+  margin: 20px 0px 10px 0px;
+}
+
+.accountBalance {
+  float: right;
+  text-align: right;
+}
+
+.accountBalance {
+  line-height: 0.1em;
+}
+
+.entryAmount, .entryBalance {
+  text-align: right;
+}
+
+form {
+  padding: 10px;
+}
+
+.formButtons {
+  text-align: right;
+}
+
+.formButtons button {
+  margin: 0px 0px 0px 10px;
+}
