@@ -2,6 +2,10 @@
   vertical-align: middle;
 }
 
+th {
+  text-align: center;
+}
+
 .accountSummary {
   vertical-align: middle;
   padding: 0px;
@@ -21,14 +25,24 @@
   text-align: right;
 }
 
-form {
-  padding: 10px;
-}
-
 .formButtons {
   text-align: right;
 }
 
 .formButtons button {
   margin: 0px 0px 0px 10px;
+}
+
+fieldset {
+  float: left;
+}
+
+fieldset.form-group>.btn-group>.btn-primary{
+  color: #204d74;
+  background: white;
+}
+
+fieldset.form-group>.btn-group>.active {
+  color: white;
+  background: #286090;
 }
