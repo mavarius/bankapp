@@ -25,7 +25,11 @@ const App = React.createClass({
       transactions: [],
       currentBalance: 0,
       currentlyEditing: {},
-      toUpdateWith: {}
+      toUpdateWith: {
+        details: "",
+        amount: "",
+        debit: false
+      }
     }
   },
 
@@ -41,14 +45,23 @@ const App = React.createClass({
     if (current.length === 0) {
       update = [...transactions, transaction]
     } else {
-      console.log('existing')
+      update = transactions.map((item) => {
+        if (transaction.id === item.id) {
+          return transaction
+        } else {
+          return item
+        }
+      })
     }
 
-      this.setState({
-        transactions: update,
-        currentlyEditing: {},
-        toUpdateWith: {}
-      })
+    this.setState({
+      transactions: update,
+      currentlyEditing: {},
+      toUpdateWith: {
+        details: "",
+        amount: "",
+        debit: false}
+    })
   },
 
   // TRANSACTION ACTION: DELETE
@@ -63,25 +76,32 @@ const App = React.createClass({
   updateForm(event) {
     const { toUpdateWith } = this.state;
     event.preventDefault();
+
     let key = event.target.name;
     let value = event.target.value;
     toUpdateWith[key] = value;
+
     let toUpdate = Object.assign({}, this.props.currentlyEditing, toUpdateWith);
+
     this.setState({
-      currentlyEditing: toUpdate
+      toUpdateWith: toUpdate
     });
   },
 
   cancelForm(event) {
     this.setState({
       currentlyEditing: {},
-      toUpdateWith: {}
+      toUpdateWith: {
+        details: "",
+        amount: "",
+        debit: false
+      }
     })
   },
 
   // TRANSACTION ACTION: EDIT
   editTransaction(id) {
-    const { transactions } = this.state;
+    const { transactions, toUpdateWith, currentlyEditing } = this.state;
 
     let current = transactions.filter(transaction => transaction.id === id)
 
@@ -94,10 +114,22 @@ const App = React.createClass({
 
   // HANDLE BALANCE UPDATES
   updateBalance(transactionAmount) {
-    const { currentBalance } = this.state;
+    const { currentBalance, transactions } = this.state;
+
+    let total = 0;
+
+    if (transactions.length > 0) {
+      // total = transactions.reduce((acc, curr) => {
+      //   return parseFloat(curr.amount)+acc
+      // }, 0) + parseFloat(transactionAmount.value)
+    } else {
+      total = parseInt(transactionAmount.value)
+    }
+
+    console.log('total: ',total);
 
     this.setState({
-      currentBalance: transactionAmount
+      currentBalance: total
     })
   },
 
@@ -127,7 +159,7 @@ const App = React.createClass({
                 <h4 className="modal-title" id="myModalLabel">Transaction Details</h4>
               </div>
               <div className="modal-body">
-                <TransactionForm updateForm={this.updateForm} cancelForm={this.cancelForm} currentlyEditing={this.state.currentlyEditing} saveTransaction={this.saveTransaction} editTransaction={this.editTransaction} updateBalance={this.updateBalance} currentBalance={currentBalance}/>
+                <TransactionForm updateForm={this.updateForm} cancelForm={this.cancelForm} currentlyEditing={this.state.currentlyEditing} toUpdateWith={this.state.toUpdateWith} saveTransaction={this.saveTransaction} editTransaction={this.editTransaction} updateBalance={this.updateBalance} currentBalance={currentBalance}/>
               </div>
             </div>
           </div>
@@ -151,7 +183,6 @@ const AccountDetails = props => {
           <th>Date</th>
           <th>Transaction Details</th>
           <th>Amount</th>
-          <th>Account Balance</th>
           <th>Edit</th>
           <th>Delete</th>
         </tr>
@@ -162,7 +193,6 @@ const AccountDetails = props => {
             <td className="entryDate">{transaction.date}</td>
             <td className="entryDetails">{transaction.details}</td>
             <td className="entryAmount">${transaction.amount}</td>
-            <td className="entryBalance">${transaction.balance}</td>
             <td className="entryEdit"><button onClick={editTransaction.bind(null, transaction.id)} className="btn btn-sm btn-warning" data-toggle="modal" data-target="#transactionFormModal">edit</button></td>
             <td className="entryDelete"><button onClick={deleteTransaction.bind(null, transaction.id)} className="btn btn-sm btn-danger">X</button></td>
           </tr>
@@ -178,16 +208,12 @@ const TransactionForm = React.createClass({
 
     const { currentBalance, transactions, currentlyEditing } = this.props;
 
-    let { details, amount, balance, debit } = this.refs;
+    let { details, amount, debit } = this.refs;
     let transaction = {};
-    let newAmount;
 
     if (!currentlyEditing.id) {
       let newDate = moment().format('MMM DD');
       let newID = uuid();
-
-      newAmount = parseFloat(amount.value)
-      debit.checked ? newAmount *= -1 : newAmount
 
       transaction = {
         id: newID,
@@ -206,21 +232,22 @@ const TransactionForm = React.createClass({
       }
     }
 
-    let newBalance = parseFloat((currentBalance + newAmount).toFixed(2))
-    transaction.balance = newBalance
+    let newAmount = parseFloat(amount.value)
+    debit.checked ? newAmount *= -1 : newAmount
 
     this.props.saveTransaction(transaction)
-    this.props.updateBalance(newBalance)
+    this.props.updateBalance(amount)
   },
 
   render() {
     let details, amount, debit;
     // console.log("this.props.currentlyEditing: ", this.props.currentlyEditing);
-    if (this.props.currentlyEditing) {
-      details = this.props.currentlyEditing.details;
-      amount = this.props.currentlyEditing.amount;
-      debit = this.props.currentlyEditing.debit;
+    if (this.props.toUpdateWith) {
+      details = this.props.toUpdateWith.details;
+      amount = this.props.toUpdateWith.amount;
+      debit = this.props.toUpdateWith.debit;
     }
+    console.log('toUpdateWith: ', this.props.toUpdateWith);
 
     return (
       <form id="transactionForm">
@@ -228,14 +255,14 @@ const TransactionForm = React.createClass({
         <div className="form-group row">
           <label htmlFor="trDetails" className="col-sm-2 col-form-label">Details</label>
           <div className="col-sm-10">
-            <input type="text" ref="details" value={details || ""} name="details" onChange={this.props.updateForm} className="form-control form-control-sm" id="trDetails" placeholder="Hell &amp; Co"/>
+            <input type="text" ref="details" value={details} name="details" onChange={this.props.updateForm} className="form-control form-control-sm" id="trDetails" placeholder="Hell &amp; Co"/>
           </div>
         </div>
 
         <div className="form-group row">
           <label htmlFor="trAmount" className="col-sm-2 col-form-label col-form-label-sm">Amount</label>
           <div className="col-sm-10">
-            <input type="number" ref="amount" value={amount || ""} name="amount" onChange={this.props.updateForm} className="form-control form-control-sm" id="trAmount" placeholder="0.00" min="0" step="0.01" required/>
+            <input type="number" ref="amount" value={amount} name="amount" onChange={this.props.updateForm} className="form-control form-control-sm" id="trAmount" placeholder="0.00" min="0" step="0.01" required/>
           </div>
         </div>
 
