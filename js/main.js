@@ -1,6 +1,7 @@
 // MVP
   // DONE: User can add new transactions to account
-  // TODO: User can edit transactions
+  // DONE: User can edit transactions
+  // FIXME: First Letter of edit goes live
   // DONE: User can delete transactions
   // DONE: User can view account balance
   // DONE: User can make both credit and debit transactions
@@ -54,8 +55,11 @@ const App = React.createClass({
       })
     }
 
+    let total = this.updateBalance(update)
+
     this.setState({
       transactions: update,
+      currentBalance: total,
       currentlyEditing: {},
       toUpdateWith: {
         details: "",
@@ -109,28 +113,22 @@ const App = React.createClass({
       currentlyEditing: current[0],
       toUpdateWith: current[0]
     })
-
   },
 
   // HANDLE BALANCE UPDATES
-  updateBalance(transactionAmount) {
-    const { currentBalance, transactions } = this.state;
-
+  updateBalance(updatedArray) {
     let total = 0;
 
-    if (transactions.length > 0) {
-      // total = transactions.reduce((acc, curr) => {
-      //   return parseFloat(curr.amount)+acc
-      // }, 0) + parseFloat(transactionAmount.value)
-    } else {
-      total = parseInt(transactionAmount.value)
-    }
+    total = updatedArray.reduce((acc, curr) => {
+      if (curr.debit) {
+        return (parseFloat(curr.amount)*-1)+acc
+      } else {
+        return parseFloat(curr.amount)+acc
+      }
+    }, 0)
 
     console.log('total: ',total);
-
-    this.setState({
-      currentBalance: total
-    })
+    return total
   },
 
   render() {
@@ -232,22 +230,19 @@ const TransactionForm = React.createClass({
       }
     }
 
-    let newAmount = parseFloat(amount.value)
-    debit.checked ? newAmount *= -1 : newAmount
-
     this.props.saveTransaction(transaction)
-    this.props.updateBalance(amount)
   },
 
   render() {
-    let details, amount, debit;
+    let details, amount, debit, credit;
     // console.log("this.props.currentlyEditing: ", this.props.currentlyEditing);
     if (this.props.toUpdateWith) {
       details = this.props.toUpdateWith.details;
       amount = this.props.toUpdateWith.amount;
       debit = this.props.toUpdateWith.debit;
+      credit = this.props.toUpdateWith.credit;
     }
-    console.log('toUpdateWith: ', this.props.toUpdateWith);
+    // console.log('toUpdateWith: ', this.props.toUpdateWith);
 
     return (
       <form id="transactionForm">
@@ -269,7 +264,7 @@ const TransactionForm = React.createClass({
         <fieldset className="form-group">
           <div className="btn-group" data-toggle="buttons">
             <label className="btn btn-primary active">
-              credit<input className="form-check-input" ref="credit" type="radio" name="radios" id="credit"/>
+              credit<input className="form-check-input" ref="credit" value={credit} name="credit" onChange={this.props.updateForm} type="radio" name="radios" id="credit"/>
             </label>
             <label className="btn btn-primary">
               debit<input className="form-check-input" ref="debit" value={debit} name="debit" onChange={this.props.updateForm} type="radio" name="radios" id="debit"/>
