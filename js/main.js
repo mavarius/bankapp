@@ -6,7 +6,6 @@
   // DONE: User can add new transactions to account
   // DONE: User can edit transactions
   // FIXME: First Letter of edit goes live
-  // FIXME: Sticky radio buttons
   // DONE: User can delete transactions
   // DONE: User can view account balance
   // DONE: User can make both credit and debit transactions
@@ -69,7 +68,7 @@ const App = React.createClass({
       toUpdateWith: {
         details: "",
         amount: "",
-        selectedOption: ""
+        selectedOption: "credit"
       }
     })
   },
@@ -78,15 +77,20 @@ const App = React.createClass({
   deleteTransaction(id) {
     const { transactions } = this.state;
 
+    let remainingTransactions = transactions.filter(transaction => transaction.id !== id);
+
+    let total = this.updateBalance(remainingTransactions);
+
     this.setState({
-      transactions: transactions.filter(transaction => transaction.id !== id)
+      transactions: remainingTransactions,
+      currentBalance: total
     })
   },
 
   updateForm(event) {
     const { toUpdateWith } = this.state;
-    event.preventDefault();
-    console.log('event: ',event);
+    event.stopPropagation()
+    // console.log('event: ',event);
 
     let key = event.target.name;
     let value = event.target.value;
@@ -95,7 +99,7 @@ const App = React.createClass({
     let toUpdate = Object.assign({}, this.props.currentlyEditing, toUpdateWith);
 
     this.setState({
-      toUpdateWith
+      toUpdateWith: toUpdate
     });
   },
 
@@ -105,7 +109,7 @@ const App = React.createClass({
       toUpdateWith: {
         details: "",
         amount: "",
-        selectedOption: ""
+        selectedOption: "credit"
       }
     })
   },
@@ -211,7 +215,9 @@ const TransactionForm = React.createClass({
   submitForm(e) {
     e.preventDefault();
 
-    const { currentBalance, transactions, currentlyEditing } = this.props;
+    const { currentBalance, transactions, currentlyEditing, toUpdateWith } = this.props;
+
+    console.log('toUpdateWith: ', toUpdateWith);
 
     let { details, amount, selectedOption } = this.refs;
     let transaction = {};
@@ -219,13 +225,14 @@ const TransactionForm = React.createClass({
     if (!currentlyEditing.id) {
       let newDate = moment().format('MMM DD');
       let newID = uuid();
-
+      console.log('toUpdateWith.value: ', toUpdateWith.selectedOption);
+      console.log('selectedOption.value: ', selectedOption.value);
       transaction = {
         id: newID,
         date: newDate,
         details: details.value,
         amount: amount.value,
-        selectedOption: selectedOption.value
+        selectedOption: toUpdateWith.selectedOption
       }
     } else {
       transaction = {
