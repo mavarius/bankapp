@@ -1,11 +1,16 @@
-// MVP
+/**
+ * @jsx React.DOM
+ */
+
+ // MVP
   // DONE: User can add new transactions to account
   // DONE: User can edit transactions
   // FIXME: First Letter of edit goes live
+  // FIXME: Sticky radio buttons
   // DONE: User can delete transactions
   // DONE: User can view account balance
   // DONE: User can make both credit and debit transactions
-  // TODO: Balance updates with edit and delete
+  // DONE: Balance updates with edit and delete
   // DONE: User can see when transactions were made
 // EXTRA FEATURES LEVEL 1
   // DONE: User can give transactions discriptions
@@ -29,7 +34,7 @@ const App = React.createClass({
       toUpdateWith: {
         details: "",
         amount: "",
-        debit: false
+        selectedOption: "credit"
       }
     }
   },
@@ -64,7 +69,8 @@ const App = React.createClass({
       toUpdateWith: {
         details: "",
         amount: "",
-        debit: false}
+        selectedOption: ""
+      }
     })
   },
 
@@ -80,6 +86,7 @@ const App = React.createClass({
   updateForm(event) {
     const { toUpdateWith } = this.state;
     event.preventDefault();
+    console.log('event: ',event);
 
     let key = event.target.name;
     let value = event.target.value;
@@ -88,7 +95,7 @@ const App = React.createClass({
     let toUpdate = Object.assign({}, this.props.currentlyEditing, toUpdateWith);
 
     this.setState({
-      toUpdateWith: toUpdate
+      toUpdateWith
     });
   },
 
@@ -98,7 +105,7 @@ const App = React.createClass({
       toUpdateWith: {
         details: "",
         amount: "",
-        debit: false
+        selectedOption: ""
       }
     })
   },
@@ -120,7 +127,7 @@ const App = React.createClass({
     let total = 0;
 
     total = updatedArray.reduce((acc, curr) => {
-      if (curr.debit) {
+      if (curr.selectedOption === 'debit') {
         return (parseFloat(curr.amount)*-1)+acc
       } else {
         return parseFloat(curr.amount)+acc
@@ -206,7 +213,7 @@ const TransactionForm = React.createClass({
 
     const { currentBalance, transactions, currentlyEditing } = this.props;
 
-    let { details, amount, debit } = this.refs;
+    let { details, amount, selectedOption } = this.refs;
     let transaction = {};
 
     if (!currentlyEditing.id) {
@@ -218,7 +225,7 @@ const TransactionForm = React.createClass({
         date: newDate,
         details: details.value,
         amount: amount.value,
-        debit: debit.checked
+        selectedOption: selectedOption.value
       }
     } else {
       transaction = {
@@ -226,7 +233,7 @@ const TransactionForm = React.createClass({
         date: currentlyEditing.date,
         details: details.value,
         amount: amount.value,
-        debit: debit.checked
+        selectedOption: currentlyEditing.selectedOption
       }
     }
 
@@ -234,13 +241,12 @@ const TransactionForm = React.createClass({
   },
 
   render() {
-    let details, amount, debit, credit;
+    let details, amount, selectedOption;
     // console.log("this.props.currentlyEditing: ", this.props.currentlyEditing);
     if (this.props.toUpdateWith) {
       details = this.props.toUpdateWith.details;
       amount = this.props.toUpdateWith.amount;
-      debit = this.props.toUpdateWith.debit;
-      credit = this.props.toUpdateWith.credit;
+      selectedOption = this.props.toUpdateWith.selectedOption;
     }
     // console.log('toUpdateWith: ', this.props.toUpdateWith);
 
@@ -248,26 +254,28 @@ const TransactionForm = React.createClass({
       <form id="transactionForm">
 
         <div className="form-group row">
-          <label htmlFor="trDetails" className="col-sm-2 col-form-label">Details</label>
-          <div className="col-sm-10">
-            <input type="text" ref="details" value={details} name="details" onChange={this.props.updateForm} className="form-control form-control-sm" id="trDetails" placeholder="Hell &amp; Co"/>
+          <label htmlFor="trDetails" className="col-sm-12 .col-form-label col-form-label-lg">Details</label>
+          <div className="col-sm-12">
+            <input type="text" ref="details" value={details} name="details" onChange={this.props.updateForm} className="form-control" id="trDetails" placeholder="Hell &amp; Co"/>
           </div>
         </div>
 
         <div className="form-group row">
-          <label htmlFor="trAmount" className="col-sm-2 col-form-label col-form-label-sm">Amount</label>
-          <div className="col-sm-10">
-            <input type="number" ref="amount" value={amount} name="amount" onChange={this.props.updateForm} className="form-control form-control-sm" id="trAmount" placeholder="0.00" min="0" step="0.01" required/>
+          <label htmlFor="trAmount" className="col-sm-12 .col-form-label col-form-label-lg">Amount</label>
+          <div className="col-sm-12">
+            <input type="number" ref="amount" value={amount} name="amount" onChange={this.props.updateForm} className="form-control form-control-lg" id="trAmount" placeholder="$0.00" min="0" step="0.01" required/>
           </div>
         </div>
 
         <fieldset className="form-group">
-          <div className="btn-group" data-toggle="buttons">
-            <label className="btn btn-primary active">
-              credit<input className="form-check-input" ref="credit" value={credit} name="credit" onChange={this.props.updateForm} type="radio" name="radios" id="credit"/>
+          <div className="form-check">
+            <label className="form-check-label">
+              <input className="form-check-input" ref="selectedOption" name="selectedOption" value="credit" onChange={this.props.updateForm} type="radio" id="credit" checked={selectedOption === 'credit'}/> Credit
             </label>
-            <label className="btn btn-primary">
-              debit<input className="form-check-input" ref="debit" value={debit} name="debit" onChange={this.props.updateForm} type="radio" name="radios" id="debit"/>
+          </div>
+          <div className="form-check">
+            <label className="form-check-label">
+              <input className="form-check-input" ref="selectedOption" name="selectedOption" value="debit" onChange={this.props.updateForm} type="radio" id="debit" checked={selectedOption === 'debit'}/> Debit
             </label>
           </div>
         </fieldset>
@@ -286,3 +294,14 @@ ReactDOM.render(
   <App/>,
   document.getElementById('root')
 )
+
+// <fieldset className="form-group">
+//   <div className="btn-group" data-toggle="buttons">
+//     <label className="btn btn-primary">
+//       credit<input className="form-check-input" ref="selectedOption" value="credit" onChange={this.props.updateForm} type="radio" id="credit" checked={selectedOption === 'credit'}/>
+//     </label>
+//     <label className="btn btn-primary">
+//       debit<input className="form-check-input" ref="selectedOption" value="debit" onChange={this.props.updateForm} type="radio" id="debit" checked={selectedOption === 'debit'}/>
+//     </label>
+//   </div>
+// </fieldset>
